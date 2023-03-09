@@ -1,0 +1,62 @@
+#TRADING-SERVICE
+apiVersion: v1
+kind: Service
+metadata:
+  name: trading-service
+  namespace: trading
+  labels:
+    app: trading-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 5000
+      protocol: TCP
+  selector:
+    app: trading-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: trading-service
+  namespace: trading
+  labels:
+    app: trading-service
+spec:
+  selector:
+    matchLabels:
+      app: trading-service
+  template:
+    metadata:
+      labels:
+        app: trading-service
+    spec:
+      containers:
+        - name: trading-service
+          image: "ovantsevich/trading-service:v1.132"
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-config
+                  key: tradingPassword
+            - name: POSTGRES_PORT
+              value: '5432'
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_HOST
+              value: postgres-trading-service.trading.svc.cluster.local
+            - name: PORT
+              value: '5000'
+            - name: HOST
+              value: '0.0.0.0'
+            - name: PRICE_SERVICE_HOST
+              value: price-service.trading.svc.cluster.local
+            - name: PRICE_SERVICE_PORT
+              value: '4000'
+            - name: PAYMENT_SERVICE_HOST
+              value: payment-service.trading.svc.cluster.local
+            - name: PAYMENT_SERVICE_PORT
+              value: '2000'
+          imagePullPolicy: IfNotPresent

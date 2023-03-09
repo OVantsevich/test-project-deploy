@@ -1,0 +1,59 @@
+#USER-SERVICE
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  namespace: trading
+  labels:
+    app: user-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 1000
+      protocol: TCP
+  selector:
+    app: user-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  namespace: trading
+  labels:
+    app: user-service
+spec:
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+    spec:
+      containers:
+        - name: user-service
+          image: "ovantsevich/user-service:v1.23"
+          env:
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: general-secret-config
+                  key: jwtToken
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-config
+                  key: userPassword
+            - name: POSTGRES_PORT
+              value: '5432'
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_HOST
+              value: postgres-user-service.trading.svc.cluster.local
+            - name: PORT
+              value: '1000'
+            - name: HOST
+              value: '0.0.0.0'
+          imagePullPolicy: IfNotPresent

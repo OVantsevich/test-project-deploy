@@ -1,0 +1,92 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: user-migration-job
+  namespace: trading
+spec:
+  template:
+    spec:
+      containers:
+        - name: flyway
+          image: ovantsevich/user-migrations:v1.2
+          args:
+            - -connectRetries=60
+            - migrate
+          env:
+            - name: FLYWAY_URL
+              value: jdbc:postgresql://postgres-user-service.trading:5432/postgres?sslmode=disable
+            - name: FLYWAY_USER
+              value: postgres
+            - name: FLYWAY_BASELINE_ON_MIGRATE
+              value: "true"
+            - name: FLYWAY_LOCATIONS
+              value: filesystem:/flyway/sql
+            - name: FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-config
+                  key: userPassword
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: payment-migration-job
+  namespace: trading
+spec:
+  template:
+    spec:
+      containers:
+        - name: flyway
+          image: ovantsevich/payment-migrations:v1
+          args:
+            - -connectRetries=60
+            - migrate
+          env:
+            - name: FLYWAY_URL
+              value: jdbc:postgresql://postgres-payment-service.trading:5432/postgres?sslmode=disable
+            - name: FLYWAY_USER
+              value: postgres
+            - name: FLYWAY_BASELINE_ON_MIGRATE
+              value: "true"
+            - name: FLYWAY_LOCATIONS
+              value: filesystem:/flyway/sql
+            - name: FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-config
+                  key: paymentPassword
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Never
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: trading-migration-job
+  namespace: trading
+spec:
+  template:
+    spec:
+      containers:
+        - name: flyway
+          image: ovantsevich/trading-migrations:v1
+          args:
+            - -connectRetries=60
+            - migrate
+          env:
+            - name: FLYWAY_URL
+              value: jdbc:postgresql://postgres-trading-service.trading:5432/postgres?sslmode=disable
+            - name: FLYWAY_USER
+              value: postgres
+            - name: FLYWAY_BASELINE_ON_MIGRATE
+              value: "true"
+            - name: FLYWAY_LOCATIONS
+              value: filesystem:/flyway/sql
+            - name: FLYWAY_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-config
+                  key: tradingPassword
+          imagePullPolicy: IfNotPresent
+      restartPolicy: Never

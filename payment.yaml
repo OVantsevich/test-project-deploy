@@ -1,0 +1,54 @@
+#PAYMENT-SERVICE
+apiVersion: v1
+kind: Service
+metadata:
+  name: payment-service
+  namespace: trading
+  labels:
+    app: payment-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 2000
+      protocol: TCP
+  selector:
+    app: payment-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: payment-service
+  namespace: trading
+  labels:
+    app: payment-service
+spec:
+  selector:
+    matchLabels:
+      app: payment-service
+  template:
+    metadata:
+      labels:
+        app: payment-service
+    spec:
+      containers:
+        - name: payment-service
+          image: "ovantsevich/payment-service:v1.131"
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-config
+                  key: paymentPassword
+            - name: POSTGRES_PORT
+              value: '5432'
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_HOST
+              value: postgres-payment-service.trading.svc.cluster.local
+            - name: PORT
+              value: '2000'
+            - name: HOST
+              value: '0.0.0.0'
+          imagePullPolicy: IfNotPresent

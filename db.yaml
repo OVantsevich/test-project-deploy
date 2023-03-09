@@ -1,0 +1,171 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-user-service
+  namespace: trading
+spec:
+  selector:
+    app: postgres-user-database
+  type: NodePort
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-user-database
+  namespace: trading
+spec:
+  selector:
+    matchLabels:
+      app: postgres-user-database
+  serviceName: postgres-user-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres-user-database
+    spec:
+      containers:
+        - name: postgres-user-database
+          image: postgres
+          volumeMounts:
+            - name: postgres-user-disk
+              mountPath: /var/lib/postgres/data
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-config
+                  key: userPassword
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-user-disk
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-payment-service
+  namespace: trading
+spec:
+  selector:
+    app: postgres-payment-database
+  type: NodePort
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-payment-database
+  namespace: trading
+spec:
+  selector:
+    matchLabels:
+      app: postgres-payment-database
+  serviceName: postgres-payment-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres-payment-database
+    spec:
+      containers:
+        - name: postgres-payment-database
+          image: postgres
+          volumeMounts:
+            - name: postgres-payment-disk
+              mountPath: /var/lib/postgres/data
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-config
+                  key: paymentPassword
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-payment-disk
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 10Gi
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-trading-service
+  namespace: trading
+spec:
+  selector:
+    app: postgres-trading-database
+  type: NodePort
+  ports:
+    - port: 5432
+      targetPort: 5432
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-trading-database
+  namespace: trading
+spec:
+  selector:
+    matchLabels:
+      app: postgres-trading-database
+  serviceName: postgres-trading-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: postgres-trading-database
+    spec:
+      containers:
+        - name: postgres-trading-database
+          image: postgres
+          volumeMounts:
+            - name: postgres-trading-disk
+              mountPath: /var/lib/postgres/data
+          env:
+            - name: POSTGRES_USER
+              value: postgres
+            - name: POSTGRES_DB
+              value: postgres
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-secret-config
+                  key: tradingPassword
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-trading-disk
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        resources:
+          requests:
+            storage: 10Gi

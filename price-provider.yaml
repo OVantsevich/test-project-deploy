@@ -1,0 +1,55 @@
+#PRICE-PROVIDER
+apiVersion: v1
+kind: Service
+metadata:
+  name: price-provider-service
+  namespace: trading
+  labels:
+    app: price-provider-service
+spec:
+  type: ClusterIP
+  ports:
+    - port: 3000
+      protocol: TCP
+  selector:
+    app: price-provider-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: price-provider-service
+  namespace: trading
+  labels:
+    app: price-provider-service
+spec:
+  selector:
+    matchLabels:
+      app: price-provider-service
+  template:
+    metadata:
+      labels:
+        app: price-provider-service
+    spec:
+      containers:
+        - name: price-provider-service
+          image: "ovantsevich/price-provider:v1.21"
+          env:
+            - name: REDIS_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret-config
+                  key: redisPassword
+            - name: REDIS_PORT
+              value: '6379'
+            - name: STREAM_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: redis-secret-config
+                  key: redisStream
+            - name: REDIS_HOST
+              value: redis-service.trading.svc.cluster.local
+            - name: PORT
+              value: '3000'
+            - name: HOST
+              value: '0.0.0.0'
+          imagePullPolicy: IfNotPresent

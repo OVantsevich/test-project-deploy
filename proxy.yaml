@@ -1,0 +1,64 @@
+#PROXY-SERVICE
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy-service
+  namespace: trading
+  labels:
+    app: proxy-service
+spec:
+  type: NodePort
+  ports:
+    - port: 4444
+      protocol: TCP
+      targetPort: 4444
+  selector:
+    app: proxy-service
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: proxy-service
+  namespace: trading
+  labels:
+    app: proxy-service
+spec:
+  selector:
+    matchLabels:
+      app: proxy-service
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: proxy-service
+    spec:
+      containers:
+        - name: proxy-service
+          image: "ovantsevich/proxy-service:v1.1826"
+          ports:
+            - containerPort: 4444
+          env:
+            - name: JWT_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: general-secret-config
+                  key: jwtToken
+            - name: PRICE_SERVICE_HOST
+              value: price-service.trading.svc.cluster.local
+            - name: PRICE_SERVICE_PORT
+              value: '4000'
+            - name: PAYMENT_SERVICE_HOST
+              value: payment-service.trading.svc.cluster.local
+            - name: PAYMENT_SERVICE_PORT
+              value: '2000'
+            - name: USER_SERVICE_HOST
+              value: user-service.trading.svc.cluster.local
+            - name: USER_SERVICE_PORT
+              value: '1000'
+            - name: TRADING_SERVICE_HOST
+              value: trading-service.trading.svc.cluster.local
+            - name: TRADING_SERVICE_PORT
+              value: '5000'
+            - name: PORT
+              value: '4444'
+          imagePullPolicy: IfNotPresent
