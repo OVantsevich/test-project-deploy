@@ -34,7 +34,7 @@ spec:
     spec:
       containers:
         - name: proxy-service
-          image: "ovantsevich/proxy-service:v1.1826"
+          image: "ovantsevich/proxy-service:v1.1829"
           ports:
             - containerPort: 4444
           env:
